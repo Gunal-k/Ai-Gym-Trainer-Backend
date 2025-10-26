@@ -461,48 +461,6 @@ async def live_posture(ws: WebSocket):
         except RuntimeError:
              pass # Connection already closed
 
-@app.post("/analyze/snapshot")
-async def analyze_snapshot(file: UploadFile = File(...)):
-    """
-    Analyzes a single snapshot, detects pose, and returns all 33
-    landmark coordinates in the format the frontend expects.
-    """
-    try:
-        # 1. Read and decode the image file
-        contents = await file.read()
-        nparr = np.frombuffer(contents, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-        if img is None:
-            raise HTTPException(status_code=400, detail="Could not decode image.")
-
-        # 2. Process the image for pose
-        results = pose.process(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-        
-        if not results.pose_landmarks:
-            raise HTTPException(status_code=400, detail="Could not detect a person in the image.")
-
-        # 3. Format landmarks for the frontend
-        # The JS code expects an array of objects with "id" and "x" keys
-        landmarks_data = []
-        all_landmarks = results.pose_landmarks.landmark
-        
-        for id_value, lm in enumerate(all_landmarks):
-            landmarks_data.append({
-                "id": id_value,
-                "name": mp_pose.PoseLandmark(id_value).name,
-                "x": lm.x,
-                "y": lm.y,
-                "z": lm.z,
-                "visibility": lm.visibility
-            })
-
-        # 4. Return the data
-        return {"landmarks": landmarks_data}
-
-    except Exception as e:
-        print(f"Snapshot Error: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing image: {e}")
-
 @app.get("/")
 def root(): return {"message":"Pose Analysis Service Running"}
 
