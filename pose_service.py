@@ -4,7 +4,7 @@ import mediapipe as mp
 import base64
 import random
 import time
-from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException
+from fastapi import FastAPI, WebSocket, File
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
